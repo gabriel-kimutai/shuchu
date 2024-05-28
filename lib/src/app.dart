@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:shuchu/src/components/bottom_sheet.dart';
@@ -17,8 +18,8 @@ enum TimerState { focus, rest }
 class _MainAppState extends State<MainApp> {
   final ValueNotifier<bool> _isRunning = ValueNotifier(false);
 
-  static Duration focusTime = const Duration(minutes: 25);
-  static Duration breakTime = const Duration(minutes: 5);
+  static Duration focusTime = const Duration(seconds: 10);
+  static Duration breakTime = const Duration(seconds: 5);
 
   static Duration initialTime = focusTime;
   static const Duration addsubTime = Duration(minutes: 1);
@@ -30,36 +31,36 @@ class _MainAppState extends State<MainApp> {
 
   static int sessionCounter = 0;
 
-  void _toggleTimer() {
+  void toggleTimer() {
     _isRunning.value = !_isRunning.value;
+    updateTimer();
+  }
+
+  void updateTimer() {
     if (_isRunning.value) {
-      updateTime();
+      timer = Timer.periodic(Durations.extralong4, (Timer t) {
+        if (variableTime.inSeconds > 0) {
+          setState(() {
+            variableTime -= Durations.extralong4;
+          });
+          log("${timer.isActive}");
+        } else {
+          setState(() {
+            resetTimer();
+            sessionCounter++;
+          });
+          _showDialog();
+        }
+      });
     } else {
       timer.cancel();
     }
   }
 
-  void updateTime() {
-    timer = Timer.periodic(Durations.extralong4, (Timer t) {
-      if (variableTime.inSeconds > 0) {
-        setState(() {
-          variableTime -= Durations.extralong4;
-        });
-      }
-      if (variableTime.inSeconds == 0) {
-        resetTimer();
-        _showDialog();
-        sessionCounter++;
-      }
-    });
-  }
-
   void resetTimer() {
-    setState(() {
-      variableTime = initialTime;
-      _isRunning.value = !_isRunning.value;
-    });
+    variableTime = initialTime;
     timer.cancel();
+    _isRunning.value = false;
   }
 
   void addMinute() {
@@ -114,19 +115,17 @@ class _MainAppState extends State<MainApp> {
 
   void _dialogAction() {
     if (timerState == TimerState.focus) {
-      setState(() {
-        initialTime = breakTime;
-        variableTime = initialTime;
-        timerState = TimerState.rest;
-      });
+      initialTime = breakTime;
+      variableTime = initialTime;
+      timerState = TimerState.rest;
+      log("${_isRunning.value}");
     } else if (timerState == TimerState.rest) {
-      setState(() {
-        initialTime = focusTime;
-        variableTime = initialTime;
-        timerState = TimerState.focus;
-      });
+      initialTime = focusTime;
+      variableTime = initialTime;
+      timerState = TimerState.focus;
     }
-    updateTime();
+    toggleTimer();
+    setState(() {});
   }
 
   @override
@@ -147,7 +146,7 @@ class _MainAppState extends State<MainApp> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     GestureDetector(
-                      onTap: _toggleTimer,
+                      onTap: toggleTimer,
                       onDoubleTap: resetTimer,
                       onVerticalDragStart: (details) {
                         if (details.globalPosition.direction > 0) {
@@ -202,8 +201,8 @@ class _MainAppState extends State<MainApp> {
                     },
                     label: Text(
                       "$sessionCounter",
-                      style:
-                          const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
                     ))
               ],
             )
