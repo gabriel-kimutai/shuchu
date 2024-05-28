@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:shuchu/src/components/bottom_sheet.dart';
@@ -13,14 +12,24 @@ class MainApp extends StatefulWidget {
   State<MainApp> createState() => _MainAppState();
 }
 
+enum TimerState { focus, rest }
+
 class _MainAppState extends State<MainApp> {
   final ValueNotifier<bool> _isRunning = ValueNotifier(false);
 
-  static Duration initialTime = const Duration(minutes: 25);
+  static Duration focusTime = const Duration(minutes: 25);
+  static Duration breakTime = const Duration(minutes: 5);
+
+  static Duration initialTime = focusTime;
   static const Duration addsubTime = Duration(minutes: 1);
   Duration variableTime = initialTime;
 
+  TimerState timerState = TimerState.focus;
+
   late Timer timer;
+
+  static int sessionCounter = 0;
+
   void _toggleTimer() {
     _isRunning.value = !_isRunning.value;
     if (_isRunning.value) {
@@ -37,12 +46,18 @@ class _MainAppState extends State<MainApp> {
           variableTime -= Durations.extralong4;
         });
       }
+      if (variableTime.inSeconds == 0) {
+        resetTimer();
+        _showDialog();
+        sessionCounter++;
+      }
     });
   }
 
   void resetTimer() {
     setState(() {
       variableTime = initialTime;
+      _isRunning.value = !_isRunning.value;
     });
     timer.cancel();
   }
@@ -74,6 +89,46 @@ class _MainAppState extends State<MainApp> {
     );
   }
 
+  void _showDialog() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: timerState == TimerState.focus
+                ? const Text("Take a break")
+                : const Text("Resume work"),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel")),
+              FilledButton(
+                  onPressed: () {
+                    _dialogAction();
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Start")),
+            ],
+          );
+        });
+  }
+
+  void _dialogAction() {
+    if (timerState == TimerState.focus) {
+      setState(() {
+        initialTime = breakTime;
+        variableTime = initialTime;
+        timerState = TimerState.rest;
+      });
+    } else if (timerState == TimerState.rest) {
+      setState(() {
+        initialTime = focusTime;
+        variableTime = initialTime;
+        timerState = TimerState.focus;
+      });
+    }
+    updateTime();
+  }
+
   @override
   Widget build(BuildContext context) {
     double timerValue =
@@ -87,21 +142,10 @@ class _MainAppState extends State<MainApp> {
               borderRadius: BorderRadius.circular(10),
             ),
             Expanded(
-              child: Container(
-                color: Colors.red,
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (!_isRunning.value)
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.remove_rounded),
-                        color: Colors.amber,
-                        style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color>(
-                                Colors.amberAccent)),
-                      ),
                     GestureDetector(
                       onTap: _toggleTimer,
                       onDoubleTap: resetTimer,
@@ -111,26 +155,25 @@ class _MainAppState extends State<MainApp> {
                         } else if (details.globalPosition.direction < 0) {
                           addMinute();
                         }
-                        log("${details.globalPosition.direction - details.localPosition.direction}");
                       },
-                      child: SizedBox(
-                        child: Text(
-                          printDuration(variableTime),
-                          style: const TextStyle(
-                            fontFamily: 'IosevkaNerdFont',
-                            fontWeight: FontWeight.normal,
-                            fontSize: 70.0,
-                          ),
+                      child: Text(
+                        printDuration(variableTime),
+                        style: const TextStyle(
+                          fontFamily: 'IosevkaNerdFont',
+                          fontWeight: FontWeight.normal,
+                          fontSize: 70.0,
                         ),
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ButtonStyle(
-                          backgroundColor:
-                              WidgetStateProperty.all(Colors.amber)),
-                      child: const Icon(Icons.add_rounded),
-                    ),
+                    timerState == TimerState.focus
+                        ? Icon(
+                            Icons.adjust_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                          )
+                        : const Icon(
+                            Icons.coffee_rounded,
+                            color: Color(0xFF957FB8),
+                          )
                   ],
                 ),
               ),
@@ -139,6 +182,7 @@ class _MainAppState extends State<MainApp> {
         ),
       ),
       bottomNavigationBar: BottomAppBar(
+        height: 70.0,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -149,11 +193,17 @@ class _MainAppState extends State<MainApp> {
               children: [
                 IconButton(
                     onPressed: () {}, icon: const Icon(Icons.label_rounded)),
-                IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.delete_rounded,
-                      color: Color(0xFFFF5D62),
+                TextButton.icon(
+                    icon: const Icon(Icons.hourglass_bottom_rounded),
+                    onPressed: () {
+                      setState(() {
+                        sessionCounter++;
+                      });
+                    },
+                    label: Text(
+                      "$sessionCounter",
+                      style:
+                          const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ))
               ],
             )

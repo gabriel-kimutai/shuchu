@@ -9,6 +9,7 @@ void main() {
 }
 
 ThemeData? themeData = ThemeData(
+    useMaterial3: true,
     colorScheme: const ColorScheme(
         brightness: Brightness.dark,
         primary: primary,
@@ -20,8 +21,8 @@ ThemeData? themeData = ThemeData(
         surface: surface,
         onSurface: foreground));
 
-const Color foreground = Color(0xFFDCD7BA);
+const Color foreground = Color(0xFFF8FBFF);
 const Color error = Color(0xFFE82424);
 const Color primary = Color(0xFF7E9CD8);
-const Color secondary = Color(0xFFFFA066);
-const Color surface = Color(0xFF16161D);
+const Color secondary = Color(0xffffa066);
+const Color surface = Color(0xff16161D);

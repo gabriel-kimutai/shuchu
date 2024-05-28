@@ -21,6 +21,5 @@ flutter:
   fonts:
     - family: IosevkaNerdFont
       fonts:
-        - asset: fonts/IosevkaNerdFont-Heavy.ttf
         - asset: fonts/IosevkaNerdFont-Thin.ttf
           style: normal

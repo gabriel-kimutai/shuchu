@@ -6,6 +6,8 @@ A Pomodoro timer written in flutter.
 - [x] Tap(double) to reset the timer.
 - [x] Swipe(up/down) to adjust initial duration.
 - [x] Progressbar.
+- [x] Alternate between focus and break state upon timer end.
+- [x] Current state indicator (focus/break)
 - [ ] Swipe up while running to add time.
 - [ ] Theming through accent colors.
 - [ ] Settings and configuration.
