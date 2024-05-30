@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:shuchu/src/components/bottom_sheet.dart';
 import 'package:shuchu/src/utils/parse_duration.dart';
 import 'package:shuchu/src/utils/remap_num.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
@@ -18,8 +19,8 @@ enum TimerState { focus, rest }
 class _MainAppState extends State<MainApp> {
   final ValueNotifier<bool> _isRunning = ValueNotifier(false);
 
-  static Duration focusTime = const Duration(seconds: 10);
-  static Duration breakTime = const Duration(seconds: 5);
+  static Duration focusTime = const Duration(minutes: 10);
+  static Duration breakTime = const Duration(minutes: 5);
 
   static Duration initialTime = focusTime;
   static const Duration addsubTime = Duration(minutes: 1);
@@ -43,12 +44,11 @@ class _MainAppState extends State<MainApp> {
           setState(() {
             variableTime -= Durations.extralong4;
           });
-          log("${timer.isActive}");
         } else {
-          setState(() {
-            resetTimer();
+          resetTimer();
+          if (timerState == TimerState.focus) {
             sessionCounter++;
-          });
+          }
           _showDialog();
         }
       });
@@ -58,9 +58,42 @@ class _MainAppState extends State<MainApp> {
   }
 
   void resetTimer() {
-    variableTime = initialTime;
-    timer.cancel();
-    _isRunning.value = false;
+    setState(() {
+      variableTime = initialTime;
+      timer.cancel();
+      _isRunning.value = false;
+    });
+  }
+
+  void resetSessionCount() {
+    setState(() {
+      sessionCounter = 0;
+    });
+  }
+
+  void showResetSessionDialog() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Session reset"),
+            content: const Text(
+                "You are about to reset the session count. Proceed?"),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel")),
+              FilledButton(
+                  onPressed: () {
+                    if (sessionCounter > 0) {
+                      resetSessionCount();
+                    }
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Ok")),
+            ],
+          );
+        });
   }
 
   void addMinute() {
@@ -118,7 +151,6 @@ class _MainAppState extends State<MainApp> {
       initialTime = breakTime;
       variableTime = initialTime;
       timerState = TimerState.rest;
-      log("${_isRunning.value}");
     } else if (timerState == TimerState.rest) {
       initialTime = focusTime;
       variableTime = initialTime;
@@ -126,6 +158,17 @@ class _MainAppState extends State<MainApp> {
     }
     toggleTimer();
     setState(() {});
+  }
+
+  @override
+  void initState() {
+    Box userPrefs = Hive.box('user_prefs');
+    super.initState();
+
+    if (mounted) {
+      WakelockPlus.toggle(
+          enable: userPrefs.get('isWakeLock', defaultValue: false));
+    }
   }
 
   @override
@@ -195,9 +238,9 @@ class _MainAppState extends State<MainApp> {
                 TextButton.icon(
                     icon: const Icon(Icons.hourglass_bottom_rounded),
                     onPressed: () {
-                      setState(() {
-                        sessionCounter++;
-                      });
+                      if (sessionCounter > 0) {
+                        showResetSessionDialog();
+                      }
                     },
                     label: Text(
                       "$sessionCounter",

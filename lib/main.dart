@@ -1,11 +1,30 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:shuchu/src/app.dart';
 
-void main() {
-  runApp(MaterialApp(
-    theme: themeData,
-    home: const MainApp(),
-  ));
+const userPrefsBox = 'user_prefs';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+  await Hive.openBox(userPrefsBox);
+
+  ValueListenable<Box> isDarkMode =
+      Hive.box(userPrefsBox).listenable(keys: ['isDarkMode']);
+
+  runApp(ValueListenableBuilder(
+      valueListenable: isDarkMode,
+      builder: (context, box, widget) {
+        return MaterialApp(
+          themeMode: box.get('isDarkMode', defaultValue: false)
+              ? ThemeMode.dark
+              : ThemeMode.light,
+          darkTheme: ThemeData.dark(useMaterial3: true),
+          home: const MainApp(),
+        );
+      }));
 }
 
 ThemeData? themeData = ThemeData(
@@ -18,6 +37,7 @@ ThemeData? themeData = ThemeData(
         onSecondary: foreground,
         error: error,
         onError: foreground,
+        surfaceContainer: Color(0xFF363646),
         surface: surface,
         onSurface: foreground));
 

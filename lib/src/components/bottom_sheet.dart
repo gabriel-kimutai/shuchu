@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shuchu/src/pages/about_page.dart';
+import 'package:shuchu/src/pages/settings_page.dart';
 
 class MenuBottomSheet extends StatelessWidget {
   const MenuBottomSheet({super.key});
@@ -28,7 +29,7 @@ class MenuBottomSheet extends StatelessWidget {
           ClickableListItem(
             icon: Icon(Icons.settings_rounded),
             label: "Settings",
-            page: Placeholder(),
+            page: SettingsPage(),
           ),
           ClickableListItem(
             icon: Icon(Icons.info_rounded),
