@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -18,6 +20,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
   late bool isDarkMode;
   late bool isWakeLock;
+
+  late int sessionDuration =
+      userPrefsBox.get('sessionDuration', defaultValue: 25.0);
+  late int breakDuration = userPrefsBox.get('breakDuration', defaultValue: 5.0);
 
   void onDarkMode(bool? on) async {
     setState(() {
@@ -40,6 +46,9 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() {
         isDarkMode = userPrefsBox.get('isDarkMode', defaultValue: false);
         isWakeLock = userPrefsBox.get('isWakeLock', defaultValue: false);
+
+        sessionDuration = userPrefsBox.get('sessionDuration', defaultValue: 25);
+        breakDuration = userPrefsBox.get('breakDuration', defaultValue: 5);
       });
       WakelockPlus.toggle(enable: isWakeLock);
     }
@@ -65,11 +74,53 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             children: [
               SettingGroup(groupName: "General", settingItems: [
-                ListTile(
+                ExpansionTile(
+                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
                   leading: const Icon(Icons.timer_rounded),
                   title: const Text("Duration settings"),
-                  onTap: () {},
                   shape: shapeBorder,
+                  collapsedShape: shapeBorder,
+                  childrenPadding: EdgeInsets.symmetric(horizontal: 16.0),
+                  children: [
+                    const Text(
+                      "Session duration",
+                      style: TextStyle(fontSize: 12.0),
+                    ),
+                    Slider(
+                      label: sessionDuration.round().toString(),
+                      min: 15,
+                      max: 60,
+                      divisions: 9,
+                      value: sessionDuration.roundToDouble(),
+                      onChanged: (double val) {
+                        setState(() {
+                          sessionDuration = val.round();
+                        });
+                      },
+                      onChangeEnd: (double val) async {
+                        await userPrefsBox.put('sessionDuration', val.round());
+                      },
+                    ),
+                    const Text(
+                      "Break duration",
+                      style: TextStyle(fontSize: 12.0),
+                    ),
+                    Slider(
+                      label: breakDuration.round().toString(),
+                      min: 5,
+                      max: 15,
+                      divisions: 2,
+                      value: breakDuration.roundToDouble(),
+                      onChanged: (double val) {
+                        setState(() {
+                          breakDuration = val.round();
+                        });
+                      },
+                      onChangeEnd: (double val) async {
+                        await userPrefsBox.put('breakDuration', val.round());
+                      },
+                    ),
+                  ],
                 ),
                 CheckboxListTile(
                     secondary: const Icon(Icons.brightness_high_rounded),

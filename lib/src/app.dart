@@ -19,8 +19,14 @@ enum TimerState { focus, rest }
 class _MainAppState extends State<MainApp> {
   final ValueNotifier<bool> _isRunning = ValueNotifier(false);
 
-  static Duration focusTime = const Duration(minutes: 10);
-  static Duration breakTime = const Duration(minutes: 5);
+  static Box userPrefs = Hive.box('user_prefs');
+
+  static final int _focusTime =
+      userPrefs.get('sessionDuration', defaultValue: 25);
+  static final int _breakTime = userPrefs.get('breakDuration', defaultValue: 5);
+
+  static Duration focusTime = Duration(minutes: _focusTime);
+  static Duration breakTime = Duration(minutes: _breakTime);
 
   static Duration initialTime = focusTime;
   static const Duration addsubTime = Duration(minutes: 1);
@@ -163,11 +169,16 @@ class _MainAppState extends State<MainApp> {
   @override
   void initState() {
     Box userPrefs = Hive.box('user_prefs');
+
+    int focus = userPrefs.get('sessionDuration', defaultValue: 25);
+    int rest = userPrefs.get('breakDuration', defaultValue: 5);
     super.initState();
 
     if (mounted) {
       WakelockPlus.toggle(
           enable: userPrefs.get('isWakeLock', defaultValue: false));
+      focusTime = Duration(minutes: focus);
+      breakTime = Duration(minutes: rest);
     }
   }
 
