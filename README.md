@@ -1,3 +1,9 @@
+-------------
+title: Shuchu
+description: A Pomodoro timer written in flutter.
+tags: flutter dart
+-------------
+
 # shuchu
 
 A Pomodoro timer written in flutter.
@@ -8,10 +14,12 @@ A Pomodoro timer written in flutter.
 - [x] Progressbar.
 - [x] Alternate between focus and break state upon timer end.
 - [x] Current state indicator (focus/break)
+- [ ] Settings and configuration.
+  - [x] Focus and duration
+  - [x] Persistent dark/light mode switch.
+- [ ] Visual, audio cues on timer/break start/end.
 - [ ] Swipe up while running to add time.
 - [ ] Theming through accent colors.
-- [ ] Settings and configuration.
-- [ ] Visual, audio cues on timer/break start/end.
 - [ ] Foreground service and notification.
 - [ ] Show on lockscreen?
 - [ ] Zen/focus mode
